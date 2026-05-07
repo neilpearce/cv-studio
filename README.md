@@ -178,3 +178,4 @@ These were explicitly scoped out of the MVP. Each is a manageable follow-up:
 - **Cover letters / multi-language / offline** — straightforward add-ons.
 
 Templates are decoupled and version-agnostic, so adding more templates is just adding a file to `src/components/templates/` and registering it in `index.tsx`.
+# cv-studio

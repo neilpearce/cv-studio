@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, Redo2, Undo2, Loader2, Check, AlertCircle } from "lucide-react";
+import { ArrowLeft, ChevronDown, Download, FileText, Redo2, Undo2, Loader2, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   closestCenter,
@@ -21,6 +21,12 @@ import {
 } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { useAutosave } from "@/hooks/useAutosave";
@@ -98,23 +104,23 @@ export function Editor({ initial }: { initial: InitialCV }) {
     set({ ...state, sectionOrder: arrayMove(state.sectionOrder, oldIndex, newIndex) });
   }
 
-  async function exportPDF() {
+  async function exportFile(format: "pdf" | "docx") {
     setExporting(true);
     try {
-      const res = await fetch(`/api/cvs/${initial.id}/export/pdf`, { method: "POST" });
+      const res = await fetch(`/api/cvs/${initial.id}/export/${format}`, { method: "POST" });
       if (!res.ok) throw new Error("Export failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${name || "resume"}.pdf`;
+      a.download = `${name || "resume"}.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
-      toast.error("Could not export PDF");
+      toast.error(`Could not export ${format.toUpperCase()}`);
     } finally {
       setExporting(false);
     }
@@ -143,10 +149,25 @@ export function Editor({ initial }: { initial: InitialCV }) {
             <Redo2 className="h-4 w-4" />
           </Button>
           <ThemeToggle />
-          <Button onClick={exportPDF} disabled={exporting}>
-            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            <span>Export PDF</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={exporting}>
+                {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                <span>Export</span>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => exportFile("pdf")}>
+                <FileText className="h-4 w-4" />
+                Export as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => exportFile("docx")}>
+                <FileText className="h-4 w-4" />
+                Export as Word (.docx)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 

@@ -13,11 +13,18 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/dashboard");
 
-  const cvs = await prisma.cV.findMany({
-    where: { userId: session.user.id },
-    orderBy: { updatedAt: "desc" },
-    select: { id: true, name: true, template: true, updatedAt: true, createdAt: true },
-  });
+  const [cvs, coverLetters] = await Promise.all([
+    prisma.cV.findMany({
+      where: { userId: session.user.id },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, name: true, template: true, updatedAt: true, createdAt: true },
+    }),
+    prisma.coverLetter.findMany({
+      where: { userId: session.user.id },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, name: true, template: true, updatedAt: true, createdAt: true },
+    }),
+  ]);
 
   async function signOutAction() {
     "use server";
@@ -49,6 +56,13 @@ export default async function DashboardPage() {
       <main className="container py-10">
         <DashboardClient
           initialCvs={cvs.map((c) => ({
+            id: c.id,
+            name: c.name,
+            template: c.template,
+            updatedAt: c.updatedAt.toISOString(),
+            createdAt: c.createdAt.toISOString(),
+          }))}
+          initialCoverLetters={coverLetters.map((c) => ({
             id: c.id,
             name: c.name,
             template: c.template,
